@@ -1,0 +1,31 @@
+{
+    "name": "cloudstek/whmcs-mollie-recurring-gateway",
+    "description": "Mollie recurring payment gateway for WHMCS",
+    "version": "1.0.0",
+    "homepage": "https://github.com/cloudstek/whmcs-mollie-payment-gateway",
+    "license": "BSD-2-Clause",
+
+    "authors": [
+        {
+            "name": "Cloudstek",
+            "email": "info@cloudstek.nl"
+        }
+    ],
+
+    "autoload": {
+        "psr-4": {
+            "Cloudstek\\WHMCS\\MollieRecurring\\": "."
+        }
+    },
+
+    "require": {
+        "php": ">=5.3",
+        "cloudstek/mollie-php-api": "^2.0",
+        "wukka/nonce": "dev-master"
+    },
+
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^2.7",
+        "frenck/php-compatibility": "^7.0"
+    }
+}
