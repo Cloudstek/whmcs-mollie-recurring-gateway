@@ -1,49 +1,24 @@
 <?php
 
-/**
- * Mollie Recurring Payment Gateway
- *
- * @author Cloudstek <info@cloudstek.nl>
- * @copyright 2016 Cloudstek
- * @version 1.0.0
- */
+declare(strict_types=1);
 
 namespace Cloudstek\WHMCS\MollieRecurring;
 
-use Mollie\API\Mollie;
 use Mollie\API\Exception\RequestException;
+use Mollie\API\Mollie;
 
 /**
- * Capture action
+ * Capture action.
  */
 class Capture extends ActionBase
 {
-    /** @var int $invoiceId Invoice ID */
-    private $invoiceId;
-
-    /** @var array $clientDetails Client details */
-    private $clientDetails;
-
     /**
-     * Capture action constructor
-     * @param array $params Capture action parameters.
-     */
-    public function __construct(array $params)
-    {
-        parent::__construct($params);
-
-        // Store invoice ID, you'll need it.
-        $this->invoiceId = $params['invoiceid'];
-
-        // Client details.
-        $this->clientDetails = $params['clientdetails'];
-    }
-
-    /**
-     * Generate status message
-     * @param string $status  Status.
-     * @param string $message Status message.
-     * @param array  $data    Raw data to append to message.
+     * Generate status message.
+     *
+     * @param string $status  status
+     * @param string $message status message
+     * @param array  $data    raw data to append to message
+     *
      * @return array
      */
     private function statusMessage($status, $message, array $data = null)
@@ -65,7 +40,8 @@ class Capture extends ActionBase
     }
 
     /**
-     * Run capture action
+     * Run capture action.
+     *
      * @return array|string
      */
     public function run()
@@ -144,7 +120,7 @@ class Capture extends ActionBase
             )), 'Success');
 
             // Return "success" as string to avoid WHMCS marking invoice as paid and executing hooks.
-            return "success";
+            return 'success';
         } catch (RequestException $ex) {
             // Mark transaction failed.
             $this->updateTransactionStatus($this->invoiceId, 'failed');

@@ -1,38 +1,37 @@
 <?php
 /**
- * Mollie Recurring Payment Gateway
+ * Mollie Recurring Payment Gateway.
+ *
  * @version 1.0.0
  */
-
-if (!defined("WHMCS")) {
+if (!defined('WHMCS')) {
     die('This file cannot be accessed directly');
 }
 
-require_once __DIR__ . '/mollierecurring/vendor/autoload.php';
+require_once __DIR__.'/mollierecurring/vendor/autoload.php';
 
 use Cloudstek\WHMCS\MollieRecurring\AdminStatus as MollieRecurringAdminStatus;
 use Cloudstek\WHMCS\MollieRecurring\Capture as MollieRecurringCapture;
 use Cloudstek\WHMCS\MollieRecurring\Link as MollieRecurringLink;
 use Cloudstek\WHMCS\MollieRecurring\Refund as MollieRecurringRefund;
-
 use Symfony\Component\Translation\Loader\PhpFileLoader;
 
 /**
- * Payment gateway metadata
+ * Payment gateway metadata.
+ *
  * @return array
  */
 function mollierecurring_MetaData()
 {
     return array(
-        'DisplayName'                   => 'Mollie Recurring Payments',
-        'APIVersion'                    => '1.1',
-        'DisableLocalCredtCardInput'    => true
+        'DisplayName' => 'Mollie Recurring Payments',
+        'APIVersion' => '1.1',
+        'DisableLocalCredtCardInput' => true
     );
 }
 
 /**
- * Payment gateway language
- * @return void
+ * Payment gateway language.
  */
 function mollierecurring_lang()
 {
@@ -45,25 +44,26 @@ function mollierecurring_lang()
     $lang->addLoader('mollierecurring', new PhpFileLoader());
 
     // Load messages.
-    foreach (glob(__DIR__. '/lang/*.php') as $langFile) {
-        echo("<pre>");
+    foreach (glob(__DIR__.'/lang/*.php') as $langFile) {
+        echo '<pre>';
         var_dump($langFile);
-        echo("</pre>");
+        echo '</pre>';
         die();
         $lang->addResource('mollierecurring', $langFile, substr(basename($langFile), 0, -4));
     }
 
     // Update $_LANG global with new messages.
     $_LANG = $lang->toArray();
-    
-    echo("<pre>");
+
+    echo '<pre>';
     print_r($lang);
-    echo("</pre>");
+    echo '</pre>';
     die();
 }
 
 /**
- * Payment gateway configuration
+ * Payment gateway configuration.
+ *
  * @return array
  */
 function mollierecurring_config()
@@ -76,23 +76,23 @@ function mollierecurring_config()
 
     // Visible options.
     return array(
-        'FriendlyName'  => array(
-            'Type'  => 'System',
+        'FriendlyName' => array(
+            'Type' => 'System',
             'Value' => 'Mollie Recurring Payments'
         ),
-        'live_api_key'  => array(
+        'live_api_key' => array(
             'FriendlyName' => $lang->trans('mollierecurring.config.liveapikey.name'),
             'Type' => 'text',
             'Size' => '25',
             'Description' => $lang->trans('mollierecurring.config.liveapikey.description')
         ),
-        'test_api_key'  => array(
+        'test_api_key' => array(
             'FriendlyName' => $lang->trans('mollierecurring.config.testapikey.name'),
             'Type' => 'text',
             'Size' => '25',
             'Description' => $lang->trans('mollierecurring.config.testapikey.description')
         ),
-        'sandbox'       => array(
+        'sandbox' => array(
             'FriendlyName' => $lang->trans('mollierecurring.config.sandbox.name'),
             'Type' => 'yesno',
             'Size' => '25',
@@ -102,9 +102,10 @@ function mollierecurring_config()
 }
 
 /**
- * Capture transaction
+ * Capture transaction.
  *
- * @param array $params Payment Gateway Module Parameters.
+ * @param array $params payment Gateway Module Parameters
+ *
  * @return array Transaction response status
  */
 function mollierecurring_capture(array $params)
@@ -113,9 +114,10 @@ function mollierecurring_capture(array $params)
 }
 
 /**
- * Refund transaction
+ * Refund transaction.
  *
- * @param  array $params Payment Gateway Module Parameters.
+ * @param array $params payment Gateway Module Parameters
+ *
  * @return array Transaction response status
  */
 function mollierecurring_refund(array $params)
@@ -124,9 +126,10 @@ function mollierecurring_refund(array $params)
 }
 
 /**
- * Invoice page payment form output
+ * Invoice page payment form output.
  *
- * @param array $params Client area payment form output.
+ * @param array $params client area payment form output
+ *
  * @return string Payment form HTML
  */
 function mollierecurring_link(array $params)
@@ -135,9 +138,10 @@ function mollierecurring_link(array $params)
 }
 
 /**
- * Display message when invoice payment is pending
+ * Display message when invoice payment is pending.
  *
- * @param array $params Admin status message parameters.
+ * @param array $params admin status message parameters
+ *
  * @return array
  */
 function mollierecurring_adminstatusmsg(array $params)

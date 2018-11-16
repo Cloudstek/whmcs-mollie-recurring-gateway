@@ -18,15 +18,15 @@ $_ADDONLANG['mollierecurring'] = array(
     'link' => array(
         'paymentpending' => 'Uw betaling is momenteel in behandeling en zal automatisch worden verwerkt.',
         'error' => 'Er is een fout opgetreden, selecteer a.u.b. een andere betalingsgateway of probeer het later '
-            . 'opnieuw.'
+            .'opnieuw.'
     ),
     'admin' => array(
         'missingapikey' => 'Vul a.u.b. uw API sleutel(s) in om deze betalingsgateway te gebruiken.',
         'notsetup' => 'Automatisch incasso is niet ingesteld door de klant.',
         'paymentpending' => 'Er is een betaling in behandeling voor deze factuur. Status zal automatisch '
-            . 'bijgewerkt worden zodra een bevestiging is ontvangen van Mollie.',
+            .'bijgewerkt worden zodra een bevestiging is ontvangen van Mollie.',
         'paymentfailed' => 'Automatisch incasso voor deze factuur is niet gelukt. Bekijk het gateway logboek voor meer '
-            . 'details.',
+            .'details.',
         'novalidmandate' => 'Automatisch incasso is niet ingesteld door de klant. Een geldig mandaat ontbreekt.',
     ),
     'capture' => array(
@@ -36,11 +36,11 @@ $_ADDONLANG['mollierecurring'] = array(
             .' from callback for transaction %transaction%.',
         'paymentfailed' => 'Failed to create payment for invoice %invoice%.',
         'missingcustomerid' => 'Failed to create payment for invoice %invoice%. Customer ID is missing - customer'
-            . ' should set up recurring payments again.',
+            .' should set up recurring payments again.',
         'novalidmandate' => 'Failed to create payment for invoice %invoice%. No valid mandates found - customer should'
-            . ' set up recurring payments again.',
+            .' set up recurring payments again.',
         'customernotfound' => 'Failed to create payment for invoice %invoice%. Customer %customer% could not be found'
-            . ' - customer should set up recurring payments again.'
+            .' - customer should set up recurring payments again.'
     ),
     'refund' => array(
         'missingapikey' => 'Failed to create refund for transaction %transid% - API key is missing!',

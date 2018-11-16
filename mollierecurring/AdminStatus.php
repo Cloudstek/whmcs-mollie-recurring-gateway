@@ -1,43 +1,23 @@
 <?php
-/**
- * Mollie Recurring Payment Gateway
- * @version 1.0.0
- */
+
+declare(strict_types=1);
 
 namespace Cloudstek\WHMCS\MollieRecurring;
 
 use Mollie\API\Mollie;
 
 /**
- * Admin status message action
+ * Admin status message action.
  */
 class AdminStatus extends ActionBase
 {
-    /** @var int $invoiceId Invoice ID */
-    private $invoiceId;
-
-    /** @var string $invoiceStatus Invoice status */
-    private $invoiceStatus;
-
     /**
-     * Admin status message action constructor
-     * @param array $params Action parameters.
-     */
-    public function __construct(array $params)
-    {
-        parent::__construct($params);
-
-        // Invoice data.
-        $this->invoiceId = $params['invoiceid'];
-        $this->invoiceStatus = $params['status'];
-    }
-
-    /**
-     * Generate status message
+     * Generate status message.
      *
-     * @param string      $status  Status message type.
-     * @param string      $message Status message content.
-     * @param string|null $title   Status message title.
+     * @param string      $status  status message type
+     * @param string      $message status message content
+     * @param string|null $title   status message title
+     *
      * @return array
      */
     private function statusMessage($status, $message, $title = null)
@@ -50,7 +30,8 @@ class AdminStatus extends ActionBase
     }
 
     /**
-     * Run admin status message action
+     * Run admin status message action.
+     *
      * @return array|null
      */
     public function run()
@@ -63,7 +44,7 @@ class AdminStatus extends ActionBase
         }
 
         // Check for pending transaction.
-        if ($this->invoiceStatus == "Unpaid") {
+        if ($this->invoiceStatus == 'Unpaid') {
             // Get customer ID.
             $customerId = $this->getCustomerId($this->actionParams['userid']);
 

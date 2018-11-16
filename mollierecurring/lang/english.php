@@ -23,7 +23,7 @@ $_ADDONLANG['mollierecurring'] = array(
         'missingapikey' => 'Please enter your API key(s) to use this payment gateway.',
         'notsetup' => 'Automatic payments have not been set up by the client.',
         'paymentpending' => 'There is a payment pending for this invoice. Status will be automatically updated once a'
-            . ' confirmation is received from Mollie.',
+            .' confirmation is received from Mollie.',
         'paymentfailed' => 'Automatic payment for this invoice has failed. Please check the gateway logs for details.',
         'novalidmandate' => 'Automatic payments have not been set up by the client. A valid mandate is missing.',
     ),
@@ -34,11 +34,11 @@ $_ADDONLANG['mollierecurring'] = array(
             .' from callback for transaction %transaction%.',
         'paymentfailed' => 'Failed to create payment for invoice %invoice%.',
         'missingcustomerid' => 'Failed to create payment for invoice %invoice%. Customer ID is missing - customer'
-            . ' should set up recurring payments again.',
+            .' should set up recurring payments again.',
         'novalidmandate' => 'Failed to create payment for invoice %invoice%. No valid mandates found - customer should'
-            . ' set up recurring payments again.',
+            .' set up recurring payments again.',
         'customernotfound' => 'Failed to create payment for invoice %invoice%. Customer %customer% could not be found'
-            . ' - customer should set up recurring payments again.'
+            .' - customer should set up recurring payments again.'
     ),
     'refund' => array(
         'missingapikey' => 'Failed to create refund for transaction %transid% - API key is missing!',

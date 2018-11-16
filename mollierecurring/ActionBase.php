@@ -1,36 +1,63 @@
 <?php
-/**
- * Mollie Recurring Payment Gateway
- * @version 1.0.0
- */
+
+declare(strict_types=1);
 
 namespace Cloudstek\WHMCS\MollieRecurring;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
-use WHMCS\Session;
 
 /**
- * Base class for gateway actions capture, refund, link
+ * Base class for gateway actions capture, refund, link.
  */
 abstract class ActionBase
 {
-    /** @var array $actionParams Action parameters */
+    /**
+     * Action parameters.
+     *
+     * @var array
+     */
     protected $actionParams;
 
-    /** @var array $gatewayParams Gateway parameters */
+    /**
+     * Gateway parameters.
+     *
+     * @var array
+     */
     protected $gatewayParams;
 
-    /** @var string $whmcsVersion WHMCS version */
+    /**
+     * WHMCS version.
+     *
+     * @var string
+     */
     protected $whmcsVersion;
 
-    /** @var bool $sandbox Sandbox mode */
+    /**
+     * Sandbox mode.
+     *
+     * @var bool
+     */
     protected $sandbox;
 
     /**
-     * Action constructor
-     * @param array $params Action parameters.
+     * Invoice ID.
+     *
+     * @var int
+     */
+    protected $invoiceId;
+
+    /**
+     * Client details.
+     *
+     * @var array
+     */
+    protected $clientDetails;
+
+    /**
+     * Action constructor.
+     *
+     * @param array $params action parameters
      */
     protected function __construct(array $params)
     {
@@ -38,47 +65,21 @@ abstract class ActionBase
 
         // Parameters.
         $this->actionParams = $params;
-        $this->gatewayParams = getGatewayVariables('mollierecurring');
+        $this->gatewayParams = \getGatewayVariables('mollierecurring');
+        $this->invoiceId = $params['invoiceid'] ?? null;
+        $this->clientDetails = $params['clientdetails'] ?? null;
 
         // WHMCS version.
         $this->whmcsVersion = $whmcs->get_config('Version');
 
         // Sandbox mode.
-        $this->sandbox = $this->gatewayParams['sandbox'] == 'on';
+        $this->sandbox = strtolower($this->gatewayParams['sandbox']) === 'on';
     }
 
     /**
-     * Get single value from database
+     * Get current request.
      *
-     * WHMCS v6 uses an older version of Eloquent. In v7 it has been replaced by a newer version which deprecates pluck
-     * and causes different behaviour. Instead value is used, which does the same as the old pluck method.
-     *
-     * @param QueryBuilder $query  Query to execute.
-     * @param string       $column Column to get the value from.
-     * @return mixed
-     */
-    protected function pluck(QueryBuilder $query, $column)
-    {
-        // WHMCS 6.0.
-        if (version_compare($this->whmcsVersion, '7.0.0', '<')) {
-            return $query->pluck($column);
-        }
-
-        return $query->value($column);
-    }
-
-    /**
-     * Get current session
-     * @return WHMCS\Session
-     */
-    protected function getSession()
-    {
-        return new Session();
-    }
-
-    /**
-     * Get current request
-     * @return WHMCS\Http\Request
+     * @return Request
      */
     protected function getRequest()
     {
@@ -86,38 +87,37 @@ abstract class ActionBase
     }
 
     /**
-     * Get Mollie customer ID for WHMCS client
+     * Get Mollie customer ID for WHMCS client.
      *
-     * @param integer $clientId WHMCS client ID.
-     * @return string|bool Mollie customer ID or false if none defined
+     * @param int $clientId WHMCS client ID
+     *
+     * @return string|null Mollie customer ID or null if none defined
      */
     protected function getCustomerId($clientId)
     {
-        $customerId = $this->pluck(
-            Capsule::table('mod_mollie_customers')
-                ->where('clientid', $clientId),
-            'customerid'
-        );
+        $customerId = Capsule::table('mod_mollie_customers')
+            ->where('clientid', $clientId)
+            ->pluck('customerid')
+        ;
 
         try {
-            $customerId = decrypt($customerId);
+            $customerId = \decrypt($customerId);
 
             if (empty($customerId)) {
-                return false;
+                return null;
             }
 
             return $customerId;
         } catch (\Exception $ex) {
-            return false;
+            return null;
         }
     }
 
     /**
-     * Set Mollie customer ID for WHMCS client
+     * Set Mollie customer ID for WHMCS client.
      *
-     * @param integer $clientId   WHMCS client ID.
-     * @param string  $customerId Mollie customer ID.
-     * @return void
+     * @param int    $clientId   WHMCS client ID
+     * @param string $customerId mollie customer ID
      */
     protected function setCustomerId($clientId, $customerId)
     {
@@ -145,7 +145,8 @@ abstract class ActionBase
     }
 
     /**
-     * Get full URL to callback for use by the Mollie webhookUrl parameter
+     * Get full URL to callback for use by the Mollie webhookUrl parameter.
+     *
      * @return string|null
      */
     protected function getWebhookUrl()
@@ -156,7 +157,7 @@ abstract class ActionBase
         $whmcsUrl = $whmcs->isSSLAvailable() ? $whmcs->getSystemSSLURL() : $whmcs->getSystemURL();
 
         // Don't set callback when developing.
-        if (array_key_exists('develop', $this->gatewayParams) && $this->gatewayParams['develop'] == "on") {
+        if (array_key_exists('develop', $this->gatewayParams) && $this->gatewayParams['develop'] == 'on') {
             return null;
         }
 
@@ -165,7 +166,8 @@ abstract class ActionBase
     }
 
     /**
-     * Get Mollie API key
+     * Get Mollie API key.
+     *
      * @return string|null
      */
     protected function getApiKey()
@@ -180,10 +182,11 @@ abstract class ActionBase
     }
 
     /**
-     * Check for pending transactions
+     * Check for pending transactions.
      *
-     * @param integer $invoiceId Invoice ID.
-     * @return boolean
+     * @param int $invoiceId invoice ID
+     *
+     * @return bool
      */
     protected function hasPendingTransactions($invoiceId)
     {
@@ -194,10 +197,11 @@ abstract class ActionBase
     }
 
     /**
-     * Check for failed transactions
+     * Check for failed transactions.
      *
-     * @param integer $invoiceId Invoice ID.
-     * @return boolean
+     * @param int $invoiceId invoice ID
+     *
+     * @return bool
      */
     protected function hasFailedTransactions($invoiceId)
     {
@@ -208,12 +212,11 @@ abstract class ActionBase
     }
 
     /**
-     * Set transaction status
+     * Set transaction status.
      *
-     * @param integer $invoiceId     Invoice ID.
-     * @param string  $status        Status of transaction, failed or pending.
-     * @param string  $transactionId Transaction ID when pending.
-     * @return void
+     * @param int    $invoiceId     invoice ID
+     * @param string $status        status of transaction, failed or pending
+     * @param string $transactionId transaction ID when pending
      */
     protected function updateTransactionStatus($invoiceId, $status, $transactionId = null)
     {
@@ -227,8 +230,8 @@ abstract class ActionBase
             Capsule::table('mod_mollie_transactions')
                 ->where('invoiceid', $invoiceId)
                 ->update(array(
-                    'transid'   => $transactionId,
-                    'status'    => $status
+                    'transid' => $transactionId,
+                    'status' => $status
                 ));
 
             return;
@@ -237,29 +240,29 @@ abstract class ActionBase
         Capsule::table('mod_mollie_transactions')
             ->insert(array(
                 'invoiceid' => $invoiceId,
-                'transid'   => $transactionId,
-                'status'    => $status
+                'transid' => $transactionId,
+                'status' => $status
             ));
     }
 
     /**
-     * Log transaction
+     * Log transaction.
      *
-     * @param string $description Transaction description.
-     * @param string $status      Transaction status.
-     * @return void
+     * @param string $description transaction description
+     * @param string $status      transaction status
      */
     protected function logTransaction($description, $status = 'Success')
     {
         if ($this->sandbox) {
-            $description = "[SANDBOX] " . $description;
+            $description = '[SANDBOX] '.$description;
         }
 
         logTransaction($this->gatewayParams['name'], $description, ucfirst($status));
     }
 
     /**
-     * Initialization
+     * Initialization.
+     *
      * @return bool True if initialization complete and license is active
      */
     protected function initialize()
@@ -294,8 +297,7 @@ abstract class ActionBase
     }
 
     /**
-     * Run action
-     * @return void
+     * Run action.
      */
     abstract public function run();
 }

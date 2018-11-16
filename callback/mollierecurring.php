@@ -1,59 +1,70 @@
 <?php
-/**
- * Mollie Recurring Payment Gateway
- * @version 1.0.0
- */
+
+declare(strict_types=1);
 
 namespace Cloudstek\WHMCS\MollieRecurring;
 
-require_once __DIR__ . '/../../../init.php';
-require_once __DIR__ . '/../mollierecurring/vendor/autoload.php';
+require_once __DIR__.'/../../../init.php';
+require_once __DIR__.'/../mollierecurring/vendor/autoload.php';
 
-use Mollie\API\Mollie;
-use Mollie\API\Model\Payment;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Mollie\API\Model\Payment;
+use Mollie\API\Mollie;
 
 /**
- * Webhook callback class
+ * Webhook callback class.
  */
 class Callback
 {
-    /** @var array Gateway parameters */
+    /**
+     * Gateway parameters
+     *
+     * @var array
+     */
     private $params;
 
-    /** @var bool Sandbox mode */
+    /**
+     * Sandbox mode
+     *
+     * @var bool
+     */
     private $sandbox;
 
-    /** @var string WHMCS version */
+    /**
+     * WHMCS version
+     *
+     * @var string
+     */
     private $whmcsVersion;
 
     /**
-     * Callback constructor
+     * Callback constructor.
      */
     public function __construct()
     {
         $whmcs = \DI::make('app');
 
         // Load WHMCS functions.
-        $whmcs->load_function("gateway");
-        $whmcs->load_function("invoice");
+        $whmcs->load_function('gateway');
+        $whmcs->load_function('invoice');
 
         // Store WHMCS version.
         $this->whmcsVersion = $whmcs->get_config('Version');
 
         // Gateway parameters.
-        $this->params = getGatewayVariables('mollierecurring');
+        $this->params = \getGatewayVariables('mollierecurring');
 
         // Sandbox.
         $this->sandbox = $this->params['sandbox'] == 'on';
     }
 
     /**
-     * Get single value from database
+     * Get single value from database.
      *
-     * @param QueryBuilder $query  Query to execute.
-     * @param string       $column Table column to take values from.
+     * @param QueryBuilder $query  query to execute
+     * @param string       $column table column to take values from
+     *
      * @return mixed
      */
     private function pluck(QueryBuilder $query, $column)
@@ -66,26 +77,26 @@ class Callback
     }
 
     /**
-     * Log transaction
+     * Log transaction.
      *
-     * @param string $description Transaction description.
-     * @param string $status      Transaction status.
-     * @return void
+     * @param string $description transaction description
+     * @param string $status      transaction status
      */
     private function logTransaction($description, $status = 'Success')
     {
         if ($this->sandbox) {
-            $description = "[SANDBOX] " . $description;
+            $description = '[SANDBOX] '.$description;
         }
 
-        logTransaction($this->params['name'], $description, ucfirst($status));
+        \logTransaction($this->params['name'], $description, ucfirst($status));
     }
 
     /**
-     * Convert amount (in euros) to invoice currency
+     * Convert amount (in euros) to invoice currency.
      *
-     * @param integer $invoiceId Invoice ID.
-     * @param float   $amount    Transaction amount.
+     * @param int   $invoiceId invoice ID
+     * @param float $amount    transaction amount
+     *
      * @return float
      */
     private function convertCurrency($invoiceId, $amount)
@@ -106,11 +117,12 @@ class Callback
         );
 
         // Return our amount converted to invoice currency.
-        return convertCurrency($amount, $euroCurrencyId, $invoiceCurrencyId);
+        return \convertCurrency($amount, $euroCurrencyId, $invoiceCurrencyId);
     }
 
     /**
-     * Get Mollie API key
+     * Get Mollie API key.
+     *
      * @return string|null
      */
     private function getApiKey()
@@ -123,15 +135,15 @@ class Callback
     }
 
     /**
-     * Handle paid transaction
-     * @param integer $invoiceId   Invoice ID.
-     * @param Payment $transaction Transaction.
-     * @return void
+     * Handle paid transaction.
+     *
+     * @param int     $invoiceId   invoice ID
+     * @param Payment $transaction transaction
      */
     private function handlePaid($invoiceId, Payment $transaction)
     {
         // Quit if transaction exists.
-        checkCbTransID($transaction->id);
+        \checkCbTransID($transaction->id);
 
         // Convert paid amount in euros to invoice currency.
         $amount = $this->convertCurrency($invoiceId, $transaction->amount);
@@ -143,7 +155,7 @@ class Callback
         );
 
         // Add payment.
-        addInvoicePayment(
+        \addInvoicePayment(
             $invoiceId,
             $transaction->id,
             $amount,
@@ -159,14 +171,14 @@ class Callback
                             ->count();
 
         // Send message.
-        sendMessage($customMessage ? "Mollie Recurring Payment Confirmation" : "Credit Card Payment Confirmation", $invoiceId);
+        \sendMessage($customMessage ? 'Mollie Recurring Payment Confirmation' : 'Credit Card Payment Confirmation', $invoiceId);
     }
 
     /**
-     * Handle charged back transaction
-     * @param integer $invoiceId   Invoice ID.
-     * @param Payment $transaction Transaction.
-     * @return void
+     * Handle charged back transaction.
+     *
+     * @param int     $invoiceId   invoice ID
+     * @param Payment $transaction transaction
      */
     private function handleChargedBack($invoiceId, Payment $transaction)
     {
@@ -194,7 +206,7 @@ class Callback
         $this->logTransaction($transDescription, 'Charged Back');
 
         // Add transaction.
-        addTransaction(
+        \addTransaction(
             $userId,
             0,
             $transDescription,
@@ -210,32 +222,33 @@ class Callback
         $customMessage = Capsule::table('tblemailtemplates')->where('name', 'Mollie Recurring Payment Failed')->count();
 
         // Send message.
-        sendMessage($customMessage ? "Mollie Recurring Payment Failed" : "Credit Card Payment Failed", $invoiceId);
+        \sendMessage($customMessage ? 'Mollie Recurring Payment Failed' : 'Credit Card Payment Failed', $invoiceId);
     }
 
     /**
-     * Check if gateway module is activated and API keys are configured
+     * Check if gateway module is activated and API keys are configured.
      *
      * If no API keys have been entered, we cannot handle any payments and we can skip initialisation steps.
      *
-     * @return boolean
+     * @return bool
      */
     public function isActive()
     {
         $apiKey = $this->getApiKey();
+
         return !empty($apiKey);
     }
 
     /**
-     * Process transaction
+     * Process transaction.
      *
      * Main entry point of the callback. Mollie calls our callback with a POST request containing the id of our
      * transaction that has changed status. It's up to us to get the transaction by the id provided and handle it
      * according to its new status.
      *
-     * @param integer|null $transId Mollie transaction ID to process.
-     * @throws \Exception Invoice ID is missing from transaction metadata.
-     * @return void
+     * @param int|null $transId mollie transaction ID to process
+     *
+     * @throws \Exception invoice ID is missing from transaction metadata
      */
     public function process($transId)
     {
@@ -265,10 +278,10 @@ class Callback
             }
 
             // Validate invoice ID.
-            checkCbInvoiceID($invoiceId, $this->params['name']);
+            \checkCbInvoiceID($invoiceId, $this->params['name']);
 
             // Allow manually calling callback to set payment status with test mode payments.
-            if ($this->sandbox && $transaction->mode == "test") {
+            if ($this->sandbox && $transaction->mode == 'test') {
                 $status = $request->query->get('status');
 
                 if (!empty($status)) {
@@ -278,7 +291,7 @@ class Callback
 
             // Handle transaction status.
             switch ($transaction->status) {
-                case "paid":
+                case 'paid':
                     $this->handlePaid($invoiceId, $transaction);
                     break;
                 case 'charged_back':
@@ -307,14 +320,14 @@ class Callback
             );
 
             // Validate invoice ID or exit when it doesn't exist.
-            checkCbInvoiceID($invoiceId, $this->params['name']);
+            \checkCbInvoiceID($invoiceId, $this->params['name']);
 
             if (!empty($invoiceId)) {
                 // Check if custom email template has been defined.
                 $customMessage = Capsule::table('tblemailtemplates')->where('name', 'Mollie Recurring Payment Failed')->count();
 
                 // Send message.
-                sendMessage($customMessage ? "Mollie Recurring Payment Failed" : "Credit Card Payment Failed", $invoiceId);
+                \sendMessage($customMessage ? 'Mollie Recurring Payment Failed' : 'Credit Card Payment Failed', $invoiceId);
             }
         }
     }
@@ -336,7 +349,7 @@ $cb = new Callback();
 
 // Check if payment gateway active.
 if (!$cb->isActive()) {
-    $protocol = isset($_SERVER["SERVER_PROTOCOL"]) ? $_SERVER["SERVER_PROTOCOL"] : 'HTTP/1.0';
+    $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
     header("{$protocol} 503 Service Unavailable");
     die('Gateway not activated.');
 }
